@@ -1,6 +1,6 @@
 from __future__ import print_function
 from global_config import USE_STEREOCHEMISTRY
-import rdkit.Chem as Chem          
+import rdkit.Chem as Chem
 from rdkit.Chem import AllChem
 import numpy as np
 from multiprocessing import Pool, cpu_count

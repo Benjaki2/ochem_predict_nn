@@ -1,5 +1,5 @@
 from pymongo import MongoClient    # mongodb plugin
-client = MongoClient('mongodb://username:password@server.com/authenticationDB', 27017)
+client = MongoClient('localhost', 27017)
 
 def collection_example_reactions_smilesonly():
     db = client['reaction_examples']

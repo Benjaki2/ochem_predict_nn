@@ -1,0 +1,10 @@
+.dockerignore
+**/.DS_Store
+**/.gitignore
+**/*.pyc
+main/**/*.dat
+Dockerfile
+docker-compose.yml
+README.md
+LICENSE
+dump

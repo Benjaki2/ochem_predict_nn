@@ -87,3 +87,7 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+dump
+
+main/output/10rxn_demo1/*.dat

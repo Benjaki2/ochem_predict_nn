@@ -152,13 +152,18 @@ def preprocess_candidate_edits(reactants, candidate_list):
 
 	return [x_h_lost, x_h_gain, x_bond_lost, x_bond_gain]
 
-def score_candidates(reactants, candidate_list, xs):
+def score_candidates(reactants, candidate_list, xs, fname):
 
 	pred = model.predict(xs, batch_size = 20)[0]
 	rank = ss.rankdata(pred)
 
-	fname = raw_input('Enter file name to save to: ') + '.dat'
-	with open(os.path.join(FROOT, fname), 'w') as fid:
+	if not fname:
+		fname = raw_input('Enter file name to save to: ') + '.dat'
+	else:
+		fname = fname + '.dat'
+	if not fname.startswith('/'):
+		fname = os.path.join(FROOT, fname)
+	with open(fname, 'w') as fid:
 		fid.write('FOR REACTANTS {}\n'.format(Chem.MolToSmiles(reactants)))
 		fid.write('Candidate product\tCandidate edit\tProbability\tRank\n')
 		for (c, candidate) in enumerate(candidate_list):
@@ -167,7 +172,11 @@ def score_candidates(reactants, candidate_list, xs):
 			fid.write('{}\t{}\t{}\t{}\n'.format(
 				candidate_smile, candidate_edit, pred[c], 1 + len(pred) - rank[c]
 			))
-	print('Wrote to file {}'.format(os.path.join(FROOT, fname)))
+	print('Wrote to file {}'.format(fname))
+
+	import shutil
+	with open(fname, "r") as f:
+		shutil.copyfileobj(f, sys.stdout)
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
@@ -177,6 +186,10 @@ if __name__ == '__main__':
 						help = 'Mincount of templates, default 50')
 	parser.add_argument('-v', type = int, default = 1,
 						help = 'Verbose? default 1')
+	parser.add_argument('--smiles', type = str,
+						help = 'Smile string input')
+	parser.add_argument('--output', type = str,
+						help = 'Output file')
 	args = parser.parse_args()
 
 	v = bool(int(args.v))
@@ -234,24 +247,47 @@ if __name__ == '__main__':
 	)
 	model.load_weights(WEIGHTS_FPATH)
 
-	# Wait for user prompt
-	while True:
-		reactants = Chem.MolFromSmiles(raw_input('Enter SMILES of reactants: '))
+	smiles = args.smiles
+
+
+	if smiles:
+
+		reactants = Chem.MolFromSmiles(smiles)
 		if not reactants:
 			print('Could not parse!')
-			continue
+		else:
+			print('Number of reactant atoms: {}'.format(len(reactants.GetAtoms())))
+			# Report current reactant SMILES string
+			print('Reactants w/o map: {}'.format(Chem.MolToSmiles(reactants)))
+			# Add new atom map numbers
+			[a.SetProp('molAtomMapNumber', str(i+1)) for (i, a) in enumerate(reactants.GetAtoms())]
+			# Report new reactant SMILES string
+			print('Reactants w/ map: {}'.format(Chem.MolToSmiles(reactants)))
 
-		print('Number of reactant atoms: {}'.format(len(reactants.GetAtoms())))
-		# Report current reactant SMILES string
-		print('Reactants w/o map: {}'.format(Chem.MolToSmiles(reactants)))
-		# Add new atom map numbers
-		[a.SetProp('molAtomMapNumber', str(i+1)) for (i, a) in enumerate(reactants.GetAtoms())]
-		# Report new reactant SMILES string
-		print('Reactants w/ map: {}'.format(Chem.MolToSmiles(reactants)))
+			# Generate candidates
+			candidate_list = reactants_to_candidate_edits(reactants)
+			# Convert to matrices
+			xs = preprocess_candidate_edits(reactants, candidate_list)
+			# Score and save to file
+			score_candidates(reactants, candidate_list, xs, args.output)
+	else:
+		while True:
+			reactants = Chem.MolFromSmiles(raw_input('Enter SMILES of reactants: '))
+			if not reactants:
+				print('Could not parse!')
+				continue
 
-		# Generate candidates
-		candidate_list = reactants_to_candidate_edits(reactants)
-		# Convert to matrices
-		xs = preprocess_candidate_edits(reactants, candidate_list)
-		# Score and save to file
-		score_candidates(reactants, candidate_list, xs)
+			print('Number of reactant atoms: {}'.format(len(reactants.GetAtoms())))
+			# Report current reactant SMILES string
+			print('Reactants w/o map: {}'.format(Chem.MolToSmiles(reactants)))
+			# Add new atom map numbers
+			[a.SetProp('molAtomMapNumber', str(i+1)) for (i, a) in enumerate(reactants.GetAtoms())]
+			# Report new reactant SMILES string
+			print('Reactants w/ map: {}'.format(Chem.MolToSmiles(reactants)))
+
+			# Generate candidates
+			candidate_list = reactants_to_candidate_edits(reactants)
+			# Convert to matrices
+			xs = preprocess_candidate_edits(reactants, candidate_list)
+			# Score and save to file
+			score_candidates(reactants, candidate_list, xs)

@@ -25,3 +25,13 @@ Models are trained and tested using ```main/score_candidates_from_edits_compact.
 ## Trained model testing
 
 An already-trained model can be loaded using ```scripts/lowe_interactive_predict.py``` to make predictions on demand. You will be prompted to enter reactant SMILES strings; the results of the forward prediction are saved as a table of products, scores, and probabilities.
+
+## Run entire prediction process in a docker container (requires [docker](https://docs.docker.com/install/))
+
+Build the docker image (includes experimental data):
+
+	docker build -t ochem_predic_nn .
+
+Run (puts outputs in `./output`):
+
+	docker run --rm -v $PWD/output:/output/ ochem_predic_nn /chem/ochem_predict_nn/scripts/lowe_interactive_predict.py --tag 10rxn_demo1 --smiles "OCC" --output /output/reaction_output
