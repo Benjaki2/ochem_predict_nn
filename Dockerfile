@@ -24,9 +24,10 @@ FROM continuumio/anaconda
 
 ####################################
 # Dependencies
+RUN echo "deb http://archive.debian.org/debian stretch main contrib non-free" > /etc/apt/sources.list
 RUN apt-get update
-RUN apt-get install -y python-h5py
 
+RUN conda install -y h5py
 RUN conda install -y tensorflow
 RUN conda install -y pymongo
 RUN conda install -y theano
@@ -164,3 +165,4 @@ ENV MKL_THREADING_LAYER=GNU
 
 # Update paths
 ENV PYTHONPATH=$PYTHONPATH:/chem:.:..:/chem/ochem_predict_nn:/rdkit/External/INCHI-API/python
+
