@@ -20,14 +20,14 @@ RUN mongod --fork --dbpath /data/db-chem --logpath /var/log/mongodb.log && mongo
 
 # Now build the main docker image
 # with all chemistry dependencies, mongo database, and mongo database data
-FROM continuumio/anaconda
+FROM continuumio/anaconda:5.0.1
 
 ####################################
 # Dependencies
 RUN echo "deb http://archive.debian.org/debian stretch main contrib non-free" > /etc/apt/sources.list
 RUN apt-get update
 
-RUN conda install -y h5py
+RUN apt-get install -y python-h5py
 RUN conda install -y tensorflow
 RUN conda install -y pymongo
 RUN conda install -y theano
